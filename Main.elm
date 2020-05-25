@@ -111,67 +111,51 @@ update msg model =
           Open ->
             if model.gameStatus == FirstOne
             then
-              if (\(w,h)->w*h-1) model.fieldSize == model.numOfMines
-              then
-                ( { model | gameStatus = Clear }
-                , Cmd.none
-                )
-              else
-                ( { model |
-                    startPos = (x,y)
-                  , viewField =
-                    array2Set x y
-                      (Hidden)
-                      model.viewField
-                  , gameStatus = Playing
-                  }
-                , Random.generate
-                  (Place 1)
-                  (putMine model.fieldSize)
-                )
+              ( { model |
+                  startPos = (x,y)
+                , viewField =
+                  array2Set x y
+                    (Hidden)
+                    model.viewField
+                , gameStatus = Playing
+                }
+              , Random.generate
+                (Place 1)
+                (putMine model.fieldSize)
+              )
             else
               case array2Get x y model.field of
                 Just Mine ->
-                  ( { model | gameStatus = GameOver }
+                  ( { model |
+                      gameStatus = GameOver
+                    , viewField =
+                      array2Set x y (Opened -1) model.viewField
+                    }
                   , Cmd.none
                   )
                 _ ->
-                  if
-                    (==)
-                    ( array2Count
-                      (\s -> case s of
-                        Opened n -> True
-                        _ -> False
-                      )
-                      model.viewField
-                    )
-                    ( ((\(n,m)->n*m) model.fieldSize)
-                      - model.numOfMines - 1
-                    )
-                  then
-                    ( { model | gameStatus = Clear }, Cmd.none)
-                  else
-                    let
-                      num =
-                        case array2Get x y model.field of
-                          Just (Space n) -> n
-                          _ -> -1
-                      setViewField =
-                        array2Set x y (Opened num)
-                          model.viewField
-                      newViewField =
-                        if num == 0
-                        then
-                          autoOpen (x,y)
-                            model.field
-                            setViewField
-                        else
+                  let
+                    num =
+                      case array2Get x y model.field of
+                        Just (Space n) -> n
+                        _ -> -1
+                    setViewField =
+                      array2Set x y (Opened num)
+                        model.viewField
+                    newViewField =
+                      if num == 0
+                      then
+                        autoOpen (x,y)
+                          model.field
                           setViewField
-                    in
-                      ( { model |
-                          viewField = newViewField
-                        }
-                      , Cmd.none )
+                      else
+                        setViewField
+                  in
+                    ( { model |
+                        viewField = newViewField
+                      }
+                      |> clearCheck
+                    , Cmd.none )
           Flag ->
             case array2Get x y model.viewField of
               Just Flagged ->
@@ -285,6 +269,24 @@ update msg model =
                 }
               , Cmd.none
               )
+
+clearCheck : Model -> Model
+clearCheck model =
+  if
+    (==)
+      ( array2Count
+        (\s -> case s of
+          Opened n -> False
+          _ -> True
+        )
+        model.viewField
+      )
+      model.numOfMines
+  then
+    { model | gameStatus = Clear }
+  else
+    model
+
 
 checkList =
   [(-1,-1),(0,-1),(1,-1)
@@ -411,6 +413,10 @@ view model =
     ( width, height ) = model.fieldSize
     fieldCoodList = getCoodList model.fieldSize
     buttonSize = "30px"
+    checkBombView x y =
+      (&&)
+        (array2Get x y model.field == Just Mine)
+        (model.gameStatus == Clear || model.gameStatus == GameOver)
     field4View =
       getCoodList model.fieldSize
         |> List.map
@@ -425,7 +431,12 @@ view model =
                     , style "width" buttonSize
                     , style "height" buttonSize
                     ]
-                    [ text (" "++(String.fromInt n)++" ") ]
+                    [ if checkBombView x y
+                      then
+                        text "💣"
+                      else
+                        text (" "++(String.fromInt n)++" ")
+                    ]
                 Just Flagged ->
                   button
                     [ onClick <| Click (x,y)
@@ -433,7 +444,7 @@ view model =
                     , style "height" buttonSize
                     , style "background-color" "gray"
                     ]
-                    [ text "🚩" ]
+                    [ if checkBombView x y then text "💣" else text "🚩" ]
                 Just Hidden ->
                   button
                     [ onClick <| Click (x,y)
@@ -441,7 +452,7 @@ view model =
                     , style "height" buttonSize
                     , style "background-color" "gray"
                     ]
-                    [ text "　"]
+                    [ if checkBombView x y then text "💣" else text "　" ]
                 _ -> text ""
             )
           )
@@ -474,7 +485,7 @@ view model =
             [ type_ "number"
             , A.max
               <| String.fromInt
-                ((\(x,y)->x*y-1) model.fieldSize)
+                ((\(x,y)->x*y-2) model.fieldSize)
             , A.min "1"
             , value <| String.fromInt model.numOfMines
             , onInput <| TextBox NumOfMines
@@ -484,16 +495,22 @@ view model =
           ]
       GameOver ->
         div[]
-          [ text "Game Over"
-          , br[][]
-          , button[onClick Button][text "continue"]
-          ]
+          <| List.append
+            field4View
+            [ br[][]
+            , text "Game Over"
+            , br[][]
+            , button[onClick Button][text "continue"]
+            ]
       Clear ->
         div[]
-          [ text "Clear"
-          , br[][]
-          , button[onClick Button][text "next game"]
-          ]
+          <| List.append
+            field4View
+            [ br[][]
+            , text "Clear"
+            , br[][]
+            , button[onClick Button][text "next game"]
+            ]
       _ ->
         div[]
           <| List.append
