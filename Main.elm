@@ -124,38 +124,42 @@ update msg model =
                 (putMine model.fieldSize)
               )
             else
-              case array2Get x y model.field of
-                Just Mine ->
-                  ( { model |
-                      gameStatus = GameOver
-                    , viewField =
-                      array2Set x y (Opened -1) model.viewField
-                    }
-                  , Cmd.none
-                  )
-                _ ->
-                  let
-                    num =
-                      case array2Get x y model.field of
-                        Just (Space n) -> n
-                        _ -> -1
-                    setViewField =
-                      array2Set x y (Opened num)
-                        model.viewField
-                    newViewField =
-                      if num == 0
-                      then
-                        autoOpen (x,y)
-                          model.field
-                          setViewField
-                      else
-                        setViewField
-                  in
+              if array2Get x y model.viewField == Just Flagged
+              then
+                noChange
+              else
+                case array2Get x y model.field of
+                  Just Mine ->
                     ( { model |
-                        viewField = newViewField
+                        gameStatus = GameOver
+                      , viewField =
+                        array2Set x y (Opened -1) model.viewField
                       }
-                      |> clearCheck
-                    , Cmd.none )
+                    , Cmd.none
+                    )
+                  _ ->
+                    let
+                      num =
+                        case array2Get x y model.field of
+                          Just (Space n) -> n
+                          _ -> -1
+                      setViewField =
+                        array2Set x y (Opened num)
+                          model.viewField
+                      newViewField =
+                        if num == 0
+                        then
+                          autoOpen (x,y)
+                            model.field
+                            setViewField
+                        else
+                          setViewField
+                    in
+                      ( { model |
+                          viewField = newViewField
+                        }
+                        |> clearCheck
+                      , Cmd.none )
           Flag ->
             case array2Get x y model.viewField of
               Just Flagged ->
