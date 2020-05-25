@@ -5420,6 +5420,90 @@ var $author$project$Main$array2Set = F4(
 					A2($elm$core$Array$get, y, arr))),
 			arr);
 	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$Main$checkList = _List_fromArray(
+	[
+		_Utils_Tuple2(-1, -1),
+		_Utils_Tuple2(0, -1),
+		_Utils_Tuple2(1, -1),
+		_Utils_Tuple2(-1, 0),
+		_Utils_Tuple2(1, 0),
+		_Utils_Tuple2(-1, 1),
+		_Utils_Tuple2(0, 1),
+		_Utils_Tuple2(1, 1)
+	]);
+var $author$project$Main$autoOpen = F3(
+	function (_v0, f, vf) {
+		var x = _v0.a;
+		var y = _v0.b;
+		var check = F3(
+			function (_v6, f_, vf_) {
+				var x_ = _v6.a;
+				var y_ = _v6.b;
+				var _v4 = _Utils_Tuple2(
+					A3($author$project$Main$array2Get, x_, y_, f_),
+					A3($author$project$Main$array2Get, x_, y_, vf_));
+				if (((((_v4.a.$ === 'Just') && (_v4.a.a.$ === 'Space')) && (!_v4.a.a.a)) && (_v4.b.$ === 'Just')) && (_v4.b.a.$ === 'Hidden')) {
+					var _v5 = _v4.b.a;
+					return true;
+				} else {
+					return false;
+				}
+			});
+		var autoOpenHelper = F3(
+			function (_v1, f_, vf_) {
+				var x_ = _v1.a;
+				var y_ = _v1.b;
+				return A3(
+					$elm$core$List$foldl,
+					F2(
+						function (_v2, nvf) {
+							var ax = _v2.a;
+							var ay = _v2.b;
+							if (A3(
+								check,
+								_Utils_Tuple2(ax + x_, ay + y_),
+								f_,
+								nvf)) {
+								return A3(
+									autoOpenHelper,
+									_Utils_Tuple2(ax + x_, ay + y_),
+									f_,
+									A4(
+										$author$project$Main$array2Set,
+										ax + x_,
+										ay + y_,
+										$author$project$Main$Opened(0),
+										nvf));
+							} else {
+								var getNum = function () {
+									var _v3 = A3($author$project$Main$array2Get, ax + x_, ay + y_, f_);
+									if ((_v3.$ === 'Just') && (_v3.a.$ === 'Space')) {
+										var n = _v3.a.a;
+										return n;
+									} else {
+										return -1;
+									}
+								}();
+								return A4(
+									$author$project$Main$array2Set,
+									ax + x_,
+									ay + y_,
+									$author$project$Main$Opened(getNum),
+									nvf);
+							}
+						}),
+					vf_,
+					$author$project$Main$checkList);
+			});
+		return A3(
+			autoOpenHelper,
+			_Utils_Tuple2(x, y),
+			f,
+			vf);
+	});
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5532,32 +5616,17 @@ var $author$project$Main$getCoodList = function (_v0) {
 	var y = _v0.b;
 	return A2(
 		$elm$core$List$map,
-		function (x_) {
+		function (y_) {
 			return A2(
 				$elm$core$List$map,
-				function (y_) {
+				function (x_) {
 					return _Utils_Tuple2(x_, y_);
 				},
-				A2($elm$core$List$range, 0, y - 1));
+				A2($elm$core$List$range, 0, x - 1));
 		},
-		A2($elm$core$List$range, 0, x - 1));
-};
-var $elm$core$Basics$negate = function (n) {
-	return -n;
+		A2($elm$core$List$range, 0, y - 1));
 };
 var $author$project$Main$makeField = function (model) {
-	var debug = A2($elm$core$Debug$log, 'called', 'makeField');
-	var checkList = _List_fromArray(
-		[
-			_Utils_Tuple2(-1, -1),
-			_Utils_Tuple2(0, -1),
-			_Utils_Tuple2(1, -1),
-			_Utils_Tuple2(-1, 0),
-			_Utils_Tuple2(1, 0),
-			_Utils_Tuple2(-1, 1),
-			_Utils_Tuple2(0, 1),
-			_Utils_Tuple2(1, 1)
-		]);
 	var newField = A3(
 		$elm$core$List$foldl,
 		F2(
@@ -5590,7 +5659,7 @@ var $author$project$Main$makeField = function (model) {
 											}
 										}),
 									0,
-									checkList));
+									$author$project$Main$checkList));
 						}
 					}(),
 					field);
@@ -5617,6 +5686,7 @@ var $author$project$Main$makeField = function (model) {
 			}(),
 			model.viewField);
 	}();
+	var debug = A2($elm$core$Debug$log, 'called', 'makeField');
 	return _Utils_update(
 		model,
 		{field: newField, viewField: newViewField});
@@ -5762,7 +5832,17 @@ var $author$project$Main$update = F2(
 				var _v5 = model.clickMode;
 				if (_v5.$ === 'Open') {
 					if (_Utils_eq(model.gameStatus, $author$project$Main$FirstOne)) {
-						return _Utils_Tuple2(
+						return _Utils_eq(
+							function (_v6) {
+								var w = _v6.a;
+								var h = _v6.b;
+								return (w * h) - 1;
+							}(model.fieldSize),
+							model.numOfMines) ? _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{gameStatus: $author$project$Main$Clear}),
+							$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
@@ -5775,16 +5855,16 @@ var $author$project$Main$update = F2(
 								$author$project$Main$Place(1),
 								$author$project$Main$putMine(model.fieldSize)));
 					} else {
-						var _v6 = A3($author$project$Main$array2Get, x, y, model.field);
-						if ((_v6.$ === 'Just') && (_v6.a.$ === 'Mine')) {
-							var _v7 = _v6.a;
+						var _v7 = A3($author$project$Main$array2Get, x, y, model.field);
+						if ((_v7.$ === 'Just') && (_v7.a.$ === 'Mine')) {
+							var _v8 = _v7.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
 									{gameStatus: $author$project$Main$GameOver}),
 								$elm$core$Platform$Cmd$none);
 						} else {
-							return _Utils_eq(
+							if (_Utils_eq(
 								A2(
 									$author$project$Main$array2Count,
 									function (s) {
@@ -5796,47 +5876,53 @@ var $author$project$Main$update = F2(
 										}
 									},
 									model.viewField),
-								(function (_v9) {
-									var n = _v9.a;
-									var m = _v9.b;
+								(function (_v10) {
+									var n = _v10.a;
+									var m = _v10.b;
 									return n * m;
-								}(model.fieldSize) - model.numOfMines) - 1) ? _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{gameStatus: $author$project$Main$Clear}),
-								$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										viewField: function () {
-											var n = function () {
-												var _v10 = A3($author$project$Main$array2Get, x, y, model.field);
-												if ((_v10.$ === 'Just') && (_v10.a.$ === 'Space')) {
-													var num = _v10.a.a;
-													return num;
-												} else {
-													return -1;
-												}
-											}();
-											return A4(
-												$author$project$Main$array2Set,
-												x,
-												y,
-												$author$project$Main$Opened(n),
-												model.viewField);
-										}()
-									}),
-								$elm$core$Platform$Cmd$none);
+								}(model.fieldSize) - model.numOfMines) - 1)) {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{gameStatus: $author$project$Main$Clear}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								var num = function () {
+									var _v11 = A3($author$project$Main$array2Get, x, y, model.field);
+									if ((_v11.$ === 'Just') && (_v11.a.$ === 'Space')) {
+										var n = _v11.a.a;
+										return n;
+									} else {
+										return -1;
+									}
+								}();
+								var setViewField = A4(
+									$author$project$Main$array2Set,
+									x,
+									y,
+									$author$project$Main$Opened(num),
+									model.viewField);
+								var newViewField = (!num) ? A3(
+									$author$project$Main$autoOpen,
+									_Utils_Tuple2(x, y),
+									model.field,
+									setViewField) : setViewField;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{viewField: newViewField}),
+									$elm$core$Platform$Cmd$none);
+							}
 						}
 					}
 				} else {
-					var _v11 = A3($author$project$Main$array2Get, x, y, model.viewField);
-					_v11$2:
+					var _v12 = A3($author$project$Main$array2Get, x, y, model.viewField);
+					_v12$2:
 					while (true) {
-						if (_v11.$ === 'Just') {
-							switch (_v11.a.$) {
+						if (_v12.$ === 'Just') {
+							switch (_v12.a.$) {
 								case 'Flagged':
-									var _v12 = _v11.a;
+									var _v13 = _v12.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -5845,7 +5931,7 @@ var $author$project$Main$update = F2(
 											}),
 										$elm$core$Platform$Cmd$none);
 								case 'Hidden':
-									var _v13 = _v11.a;
+									var _v14 = _v12.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -5854,19 +5940,19 @@ var $author$project$Main$update = F2(
 											}),
 										$elm$core$Platform$Cmd$none);
 								default:
-									break _v11$2;
+									break _v12$2;
 							}
 						} else {
-							break _v11$2;
+							break _v12$2;
 						}
 					}
 					return noChange;
 				}
 			case 'Place':
 				var n = msg.a;
-				var _v14 = msg.b;
-				var x = _v14.a;
-				var y = _v14.b;
+				var _v15 = msg.b;
+				var x = _v15.a;
+				var y = _v15.b;
 				if (_Utils_eq(
 					A3($author$project$Main$array2Get, x, y, model.field),
 					$elm$core$Maybe$Just($author$project$Main$Mine)) || _Utils_eq(
@@ -5905,9 +5991,25 @@ var $author$project$Main$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none) : noChange;
 			case 'MakeField':
-				return _Utils_Tuple2(
-					$author$project$Main$makeField(model),
-					$elm$core$Platform$Cmd$none);
+				var setModel = $author$project$Main$makeField(model);
+				var _v16 = model.startPos;
+				var x = _v16.a;
+				var y = _v16.b;
+				var startPosNum = function () {
+					var _v17 = A3($author$project$Main$array2Get, x, y, setModel.field);
+					if ((_v17.$ === 'Just') && (_v17.a.$ === 'Space')) {
+						var n = _v17.a.a;
+						return n;
+					} else {
+						return -1;
+					}
+				}();
+				var newModel = (!startPosNum) ? _Utils_update(
+					setModel,
+					{
+						viewField: A3($author$project$Main$autoOpen, model.startPos, setModel.field, setModel.viewField)
+					}) : setModel;
+				return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
 			default:
 				var t = msg.a;
 				var s = msg.b;
@@ -5923,9 +6025,9 @@ var $author$project$Main$update = F2(
 								{
 									fieldSize: A2(
 										F2(
-											function (_v16, nx) {
-												var x = _v16.a;
-												var y = _v16.b;
+											function (_v19, nx) {
+												var x = _v19.a;
+												var y = _v19.b;
 												return _Utils_Tuple2(nx, y);
 											}),
 										model.fieldSize,
@@ -5939,9 +6041,9 @@ var $author$project$Main$update = F2(
 								{
 									fieldSize: A2(
 										F2(
-											function (_v17, ny) {
-												var x = _v17.a;
-												var y = _v17.b;
+											function (_v20, ny) {
+												var x = _v20.a;
+												var y = _v20.b;
 												return _Utils_Tuple2(x, ny);
 											}),
 										model.fieldSize,
