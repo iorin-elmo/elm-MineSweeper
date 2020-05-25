@@ -111,18 +111,24 @@ update msg model =
           Open ->
             if model.gameStatus == FirstOne
             then
-              ( { model |
-                  startPos = (x,y)
-                , viewField =
-                  array2Set x y
-                    (Hidden)
-                    model.viewField
-                , gameStatus = Playing
-                }
-              , Random.generate
-                (Place 1)
-                (putMine model.fieldSize)
-              )
+              if (\(w,h)->w*h-1) model.fieldSize == model.numOfMines
+              then
+                ( { model | gameStatus = Clear }
+                , Cmd.none
+                )
+              else
+                ( { model |
+                    startPos = (x,y)
+                  , viewField =
+                    array2Set x y
+                      (Hidden)
+                      model.viewField
+                  , gameStatus = Playing
+                  }
+                , Random.generate
+                  (Place 1)
+                  (putMine model.fieldSize)
+                )
             else
               case array2Get x y model.field of
                 Just Mine ->
@@ -145,20 +151,27 @@ update msg model =
                   then
                     ( { model | gameStatus = Clear }, Cmd.none)
                   else
-                    ( { model |
-                        viewField =
-                          let
-                            n =
-                              case array2Get x y model.field of
-                                Just (Space num) -> num
-                                _ -> -1
-                          in
-                            array2Set x y (Opened n)
-                              model.viewField
-                      }
-                    , Cmd.none
-                    )
-
+                    let
+                      num =
+                        case array2Get x y model.field of
+                          Just (Space n) -> n
+                          _ -> -1
+                      setViewField =
+                        array2Set x y (Opened num)
+                          model.viewField
+                      newViewField =
+                        if num == 0
+                        then
+                          autoOpen (x,y)
+                            model.field
+                            setViewField
+                        else
+                          setViewField
+                    in
+                      ( { model |
+                          viewField = newViewField
+                        }
+                      , Cmd.none )
           Flag ->
             case array2Get x y model.viewField of
               Just Flagged ->
@@ -223,7 +236,26 @@ update msg model =
         else
           noChange
       MakeField _ ->
-        ( makeField model, Cmd.none )
+        let
+          (x,y) = model.startPos
+          setModel = makeField model
+          startPosNum =
+            case array2Get x y setModel.field of
+              Just (Space n) -> n
+              _ -> -1
+          newModel =
+            if startPosNum == 0
+            then
+              { setModel |
+                viewField =
+                  autoOpen model.startPos
+                    setModel.field
+                    setModel.viewField
+              }
+            else
+              setModel
+        in
+          ( newModel, Cmd.none )
       TextBox t s ->
         let
           n = Maybe.withDefault 2 (String.toInt s)
@@ -254,16 +286,49 @@ update msg model =
               , Cmd.none
               )
 
+checkList =
+  [(-1,-1),(0,-1),(1,-1)
+  ,(-1, 0)       ,(1, 0)
+  ,(-1, 1),(0, 1),(1, 1)
+  ]
+
+autoOpen : (Int,Int) -> Array2 Status -> Array2 ViewStatus -> Array2 ViewStatus
+autoOpen (x,y) f vf =
+  let
+    check (x_,y_) f_ vf_ =
+      case (array2Get x_ y_ f_, array2Get x_ y_ vf_ ) of
+        (Just (Space 0), Just Hidden) -> True
+        _ -> False
+    autoOpenHelper (x_,y_) f_ vf_ =
+      checkList
+        |> List.foldl
+          (\(ax,ay) nvf ->
+            if check ( ax+x_, ay+y_) f_ nvf
+            then
+              autoOpenHelper ( ax+x_, ay+y_) f_
+                ( array2Set (ax+x_) (ay+y_)
+                  (Opened 0) nvf
+                )
+            else
+              let
+                getNum =
+                  case array2Get (ax+x_) (ay+y_) f_ of
+                    Just (Space n) -> n
+                    _ -> -1
+              in
+                array2Set (ax+x_) (ay+y_)
+                  (Opened getNum) nvf
+          )
+          vf_
+  in
+    autoOpenHelper (x,y) f vf
+
+
 
 makeField : Model -> Model
 makeField model =
   let
     debug = log "called" "makeField"
-    checkList =
-      [(-1,-1),(0,-1),(1,-1)
-      ,(-1, 0)       ,(1, 0)
-      ,(-1, 1),(0, 1),(1, 1)
-      ]
     newField =
       getCoodList model.fieldSize
         |> List.concat
@@ -332,12 +397,12 @@ array2Count f arr =
 
 getCoodList : (Int,Int) -> List (List (Int,Int) )
 getCoodList (x,y) =
-  List.range 0 (x - 1)
+  List.range 0 (y - 1)
     |> List.map
-      (\x_ ->
-        List.range 0 (y - 1)
+      (\y_ ->
+        List.range 0 (x - 1)
           |> List.map
-            (\y_ -> ( x_, y_ ))
+            (\x_ -> ( x_, y_ ))
       )
 
 view : Model -> Html Msg
