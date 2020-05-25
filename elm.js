@@ -5242,7 +5242,6 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$Clear = {$: 'Clear'};
 var $author$project$Main$FirstOne = {$: 'FirstOne'};
 var $author$project$Main$Flag = {$: 'Flag'};
 var $author$project$Main$Flagged = {$: 'Flagged'};
@@ -5263,44 +5262,6 @@ var $author$project$Main$Playing = {$: 'Playing'};
 var $author$project$Main$Space = function (a) {
 	return {$: 'Space', a: a};
 };
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $author$project$Main$array2Count = F2(
-	function (f, arr) {
-		return $elm$core$List$length(
-			A2(
-				$elm$core$List$filter,
-				f,
-				A2(
-					$elm$core$List$concatMap,
-					$elm$core$Array$toList,
-					$elm$core$Array$toList(arr))));
-	});
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
@@ -5504,6 +5465,62 @@ var $author$project$Main$autoOpen = F3(
 			f,
 			vf);
 	});
+var $author$project$Main$Clear = {$: 'Clear'};
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Main$array2Count = F2(
+	function (f, arr) {
+		return $elm$core$List$length(
+			A2(
+				$elm$core$List$filter,
+				f,
+				A2(
+					$elm$core$List$concatMap,
+					$elm$core$Array$toList,
+					$elm$core$Array$toList(arr))));
+	});
+var $author$project$Main$clearCheck = function (model) {
+	return _Utils_eq(
+		A2(
+			$author$project$Main$array2Count,
+			function (s) {
+				if (s.$ === 'Opened') {
+					var n = s.a;
+					return false;
+				} else {
+					return true;
+				}
+			},
+			model.viewField),
+		model.numOfMines) ? _Utils_update(
+		model,
+		{gameStatus: $author$project$Main$Clear}) : model;
+};
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5832,17 +5849,7 @@ var $author$project$Main$update = F2(
 				var _v5 = model.clickMode;
 				if (_v5.$ === 'Open') {
 					if (_Utils_eq(model.gameStatus, $author$project$Main$FirstOne)) {
-						return _Utils_eq(
-							function (_v6) {
-								var w = _v6.a;
-								var h = _v6.b;
-								return (w * h) - 1;
-							}(model.fieldSize),
-							model.numOfMines) ? _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{gameStatus: $author$project$Main$Clear}),
-							$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
@@ -5855,74 +5862,59 @@ var $author$project$Main$update = F2(
 								$author$project$Main$Place(1),
 								$author$project$Main$putMine(model.fieldSize)));
 					} else {
-						var _v7 = A3($author$project$Main$array2Get, x, y, model.field);
-						if ((_v7.$ === 'Just') && (_v7.a.$ === 'Mine')) {
-							var _v8 = _v7.a;
+						var _v6 = A3($author$project$Main$array2Get, x, y, model.field);
+						if ((_v6.$ === 'Just') && (_v6.a.$ === 'Mine')) {
+							var _v7 = _v6.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
-									{gameStatus: $author$project$Main$GameOver}),
+									{
+										gameStatus: $author$project$Main$GameOver,
+										viewField: A4(
+											$author$project$Main$array2Set,
+											x,
+											y,
+											$author$project$Main$Opened(-1),
+											model.viewField)
+									}),
 								$elm$core$Platform$Cmd$none);
 						} else {
-							if (_Utils_eq(
-								A2(
-									$author$project$Main$array2Count,
-									function (s) {
-										if (s.$ === 'Opened') {
-											var n = s.a;
-											return true;
-										} else {
-											return false;
-										}
-									},
-									model.viewField),
-								(function (_v10) {
-									var n = _v10.a;
-									var m = _v10.b;
-									return n * m;
-								}(model.fieldSize) - model.numOfMines) - 1)) {
-								return _Utils_Tuple2(
+							var num = function () {
+								var _v8 = A3($author$project$Main$array2Get, x, y, model.field);
+								if ((_v8.$ === 'Just') && (_v8.a.$ === 'Space')) {
+									var n = _v8.a.a;
+									return n;
+								} else {
+									return -1;
+								}
+							}();
+							var setViewField = A4(
+								$author$project$Main$array2Set,
+								x,
+								y,
+								$author$project$Main$Opened(num),
+								model.viewField);
+							var newViewField = (!num) ? A3(
+								$author$project$Main$autoOpen,
+								_Utils_Tuple2(x, y),
+								model.field,
+								setViewField) : setViewField;
+							return _Utils_Tuple2(
+								$author$project$Main$clearCheck(
 									_Utils_update(
 										model,
-										{gameStatus: $author$project$Main$Clear}),
-									$elm$core$Platform$Cmd$none);
-							} else {
-								var num = function () {
-									var _v11 = A3($author$project$Main$array2Get, x, y, model.field);
-									if ((_v11.$ === 'Just') && (_v11.a.$ === 'Space')) {
-										var n = _v11.a.a;
-										return n;
-									} else {
-										return -1;
-									}
-								}();
-								var setViewField = A4(
-									$author$project$Main$array2Set,
-									x,
-									y,
-									$author$project$Main$Opened(num),
-									model.viewField);
-								var newViewField = (!num) ? A3(
-									$author$project$Main$autoOpen,
-									_Utils_Tuple2(x, y),
-									model.field,
-									setViewField) : setViewField;
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{viewField: newViewField}),
-									$elm$core$Platform$Cmd$none);
-							}
+										{viewField: newViewField})),
+								$elm$core$Platform$Cmd$none);
 						}
 					}
 				} else {
-					var _v12 = A3($author$project$Main$array2Get, x, y, model.viewField);
-					_v12$2:
+					var _v9 = A3($author$project$Main$array2Get, x, y, model.viewField);
+					_v9$2:
 					while (true) {
-						if (_v12.$ === 'Just') {
-							switch (_v12.a.$) {
+						if (_v9.$ === 'Just') {
+							switch (_v9.a.$) {
 								case 'Flagged':
-									var _v13 = _v12.a;
+									var _v10 = _v9.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -5931,7 +5923,7 @@ var $author$project$Main$update = F2(
 											}),
 										$elm$core$Platform$Cmd$none);
 								case 'Hidden':
-									var _v14 = _v12.a;
+									var _v11 = _v9.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -5940,19 +5932,19 @@ var $author$project$Main$update = F2(
 											}),
 										$elm$core$Platform$Cmd$none);
 								default:
-									break _v12$2;
+									break _v9$2;
 							}
 						} else {
-							break _v12$2;
+							break _v9$2;
 						}
 					}
 					return noChange;
 				}
 			case 'Place':
 				var n = msg.a;
-				var _v15 = msg.b;
-				var x = _v15.a;
-				var y = _v15.b;
+				var _v12 = msg.b;
+				var x = _v12.a;
+				var y = _v12.b;
 				if (_Utils_eq(
 					A3($author$project$Main$array2Get, x, y, model.field),
 					$elm$core$Maybe$Just($author$project$Main$Mine)) || _Utils_eq(
@@ -5992,13 +5984,13 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none) : noChange;
 			case 'MakeField':
 				var setModel = $author$project$Main$makeField(model);
-				var _v16 = model.startPos;
-				var x = _v16.a;
-				var y = _v16.b;
+				var _v13 = model.startPos;
+				var x = _v13.a;
+				var y = _v13.b;
 				var startPosNum = function () {
-					var _v17 = A3($author$project$Main$array2Get, x, y, setModel.field);
-					if ((_v17.$ === 'Just') && (_v17.a.$ === 'Space')) {
-						var n = _v17.a.a;
+					var _v14 = A3($author$project$Main$array2Get, x, y, setModel.field);
+					if ((_v14.$ === 'Just') && (_v14.a.$ === 'Space')) {
+						var n = _v14.a.a;
 						return n;
 					} else {
 						return -1;
@@ -6025,9 +6017,9 @@ var $author$project$Main$update = F2(
 								{
 									fieldSize: A2(
 										F2(
-											function (_v19, nx) {
-												var x = _v19.a;
-												var y = _v19.b;
+											function (_v16, nx) {
+												var x = _v16.a;
+												var y = _v16.b;
 												return _Utils_Tuple2(nx, y);
 											}),
 										model.fieldSize,
@@ -6041,9 +6033,9 @@ var $author$project$Main$update = F2(
 								{
 									fieldSize: A2(
 										F2(
-											function (_v20, ny) {
-												var x = _v20.a;
-												var y = _v20.b;
+											function (_v17, ny) {
+												var x = _v17.a;
+												var y = _v17.b;
 												return _Utils_Tuple2(x, ny);
 											}),
 										model.fieldSize,
@@ -6172,6 +6164,12 @@ var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$view = function (model) {
 	var fieldCoodList = $author$project$Main$getCoodList(model.fieldSize);
+	var checkBombView = F2(
+		function (x, y) {
+			return _Utils_eq(
+				A3($author$project$Main$array2Get, x, y, model.field),
+				$elm$core$Maybe$Just($author$project$Main$Mine)) && (_Utils_eq(model.gameStatus, $author$project$Main$Clear) || _Utils_eq(model.gameStatus, $author$project$Main$GameOver));
+		});
 	var buttonSize = '30px';
 	var field4View = $elm$core$List$concat(
 		A2(
@@ -6205,7 +6203,7 @@ var $author$project$Main$view = function (model) {
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text(
+													A2(checkBombView, x, y) ? $elm$html$Html$text('💣') : $elm$html$Html$text(
 													' ' + ($elm$core$String$fromInt(n) + ' '))
 												]));
 									case 'Flagged':
@@ -6223,7 +6221,7 @@ var $author$project$Main$view = function (model) {
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('🚩')
+													A2(checkBombView, x, y) ? $elm$html$Html$text('💣') : $elm$html$Html$text('🚩')
 												]));
 									default:
 										var _v6 = _v4.a;
@@ -6240,7 +6238,7 @@ var $author$project$Main$view = function (model) {
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('　')
+													A2(checkBombView, x, y) ? $elm$html$Html$text('💣') : $elm$html$Html$text('　')
 												]));
 								}
 							} else {
@@ -6301,7 +6299,7 @@ var $author$project$Main$view = function (model) {
 									function (_v2) {
 										var x = _v2.a;
 										var y = _v2.b;
-										return (x * y) - 1;
+										return (x * y) - 2;
 									}(model.fieldSize))),
 								$elm$html$Html$Attributes$min('1'),
 								$elm$html$Html$Attributes$value(
@@ -6326,40 +6324,48 @@ var $author$project$Main$view = function (model) {
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Game Over'),
-						A2($elm$html$Html$br, _List_Nil, _List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$Button)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('continue')
-							]))
-					]));
+				A2(
+					$elm$core$List$append,
+					field4View,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$br, _List_Nil, _List_Nil),
+							$elm$html$Html$text('Game Over'),
+							A2($elm$html$Html$br, _List_Nil, _List_Nil),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Main$Button)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('continue')
+								]))
+						])));
 		case 'Clear':
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Clear'),
-						A2($elm$html$Html$br, _List_Nil, _List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$Button)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('next game')
-							]))
-					]));
+				A2(
+					$elm$core$List$append,
+					field4View,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$br, _List_Nil, _List_Nil),
+							$elm$html$Html$text('Clear'),
+							A2($elm$html$Html$br, _List_Nil, _List_Nil),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Main$Button)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('next game')
+								]))
+						])));
 		default:
 			return A2(
 				$elm$html$Html$div,
