@@ -5862,49 +5862,55 @@ var $author$project$Main$update = F2(
 								$author$project$Main$Place(1),
 								$author$project$Main$putMine(model.fieldSize)));
 					} else {
-						var _v6 = A3($author$project$Main$array2Get, x, y, model.field);
-						if ((_v6.$ === 'Just') && (_v6.a.$ === 'Mine')) {
-							var _v7 = _v6.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										gameStatus: $author$project$Main$GameOver,
-										viewField: A4(
-											$author$project$Main$array2Set,
-											x,
-											y,
-											$author$project$Main$Opened(-1),
-											model.viewField)
-									}),
-								$elm$core$Platform$Cmd$none);
+						if (_Utils_eq(
+							A3($author$project$Main$array2Get, x, y, model.viewField),
+							$elm$core$Maybe$Just($author$project$Main$Flagged))) {
+							return noChange;
 						} else {
-							var num = function () {
-								var _v8 = A3($author$project$Main$array2Get, x, y, model.field);
-								if ((_v8.$ === 'Just') && (_v8.a.$ === 'Space')) {
-									var n = _v8.a.a;
-									return n;
-								} else {
-									return -1;
-								}
-							}();
-							var setViewField = A4(
-								$author$project$Main$array2Set,
-								x,
-								y,
-								$author$project$Main$Opened(num),
-								model.viewField);
-							var newViewField = (!num) ? A3(
-								$author$project$Main$autoOpen,
-								_Utils_Tuple2(x, y),
-								model.field,
-								setViewField) : setViewField;
-							return _Utils_Tuple2(
-								$author$project$Main$clearCheck(
+							var _v6 = A3($author$project$Main$array2Get, x, y, model.field);
+							if ((_v6.$ === 'Just') && (_v6.a.$ === 'Mine')) {
+								var _v7 = _v6.a;
+								return _Utils_Tuple2(
 									_Utils_update(
 										model,
-										{viewField: newViewField})),
-								$elm$core$Platform$Cmd$none);
+										{
+											gameStatus: $author$project$Main$GameOver,
+											viewField: A4(
+												$author$project$Main$array2Set,
+												x,
+												y,
+												$author$project$Main$Opened(-1),
+												model.viewField)
+										}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								var num = function () {
+									var _v8 = A3($author$project$Main$array2Get, x, y, model.field);
+									if ((_v8.$ === 'Just') && (_v8.a.$ === 'Space')) {
+										var n = _v8.a.a;
+										return n;
+									} else {
+										return -1;
+									}
+								}();
+								var setViewField = A4(
+									$author$project$Main$array2Set,
+									x,
+									y,
+									$author$project$Main$Opened(num),
+									model.viewField);
+								var newViewField = (!num) ? A3(
+									$author$project$Main$autoOpen,
+									_Utils_Tuple2(x, y),
+									model.field,
+									setViewField) : setViewField;
+								return _Utils_Tuple2(
+									$author$project$Main$clearCheck(
+										_Utils_update(
+											model,
+											{viewField: newViewField})),
+									$elm$core$Platform$Cmd$none);
+							}
 						}
 					}
 				} else {
