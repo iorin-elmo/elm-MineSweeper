@@ -1,5 +1,8 @@
 # elm-MineSweeper  
 mine sweeper made by Elm  
+visit [here](https://iorin-elmo.github.io/elm-MineSweeper/)  
+## Version  
+elm 0.19.1  
 ## Command  
 ```sh  
 elm make Main.elm --output=elm.js  
